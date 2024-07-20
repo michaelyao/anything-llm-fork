@@ -2,7 +2,8 @@ name: anythingllm
 
 networks:
   anything-llm:
-    driver: bridge
+    name: chroma_network
+    external: true
 
 services:
   anything-llm:
