@@ -1,0 +1,6 @@
+2024-07-22T21:08:10.254;info;(../index.js:47) this is test;
+2024-07-22T21:08:10.473;error;uncaughtException: setLogger is not a function
+TypeError: setLogger is not a function
+    at new BackgroundService (/app/server/utils/BackgroundWorkers/index.js:17:19)
+    at Server.<anonymous> (/app/server/utils/boot/index.js:62:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5);

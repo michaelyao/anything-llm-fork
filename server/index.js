@@ -2,7 +2,7 @@ process.env.NODE_ENV === "development"
   ? require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` })
   : require("dotenv").config();
 
-require("./utils/logger")();
+const logger = require("./utils/logger");
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
@@ -43,6 +43,8 @@ if (!!process.env.ENABLE_HTTPS) {
 } else {
   require("@mintplex-labs/express-ws").default(app); // load WebSockets in non-SSL mode.
 }
+
+logger.info("this is test")
 
 app.use("/api", apiRouter);
 systemEndpoints(apiRouter);

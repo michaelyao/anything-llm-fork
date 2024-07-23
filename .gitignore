@@ -9,3 +9,16 @@ v-env
 aws_cf_deploy_anything_llm.json
 yarn.lock
 *.bak
+
+dnld_data/
+job_stat/
+credentials.json
+
+logs
+*.log
+**/*.log
+**/logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*

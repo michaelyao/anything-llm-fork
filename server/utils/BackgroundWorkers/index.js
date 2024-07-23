@@ -1,7 +1,7 @@
 const path = require("path");
 const Graceful = require("@ladjs/graceful");
 const Bree = require("@mintplex-labs/bree");
-const setLogger = require("../logger");
+const logger = require("../logger");
 
 class BackgroundService {
   name = "BackgroundWorkerService";
@@ -14,7 +14,7 @@ class BackgroundService {
       return BackgroundService._instance;
     }
 
-    this.logger = setLogger();
+    this.logger = logger;
     BackgroundService._instance = this;
   }
 

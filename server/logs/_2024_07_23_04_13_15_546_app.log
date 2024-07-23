@@ -1,0 +1,7 @@
+2024-07-22T21:13:15.820;info;(../index.js:47) this is test;
+2024-07-22T21:13:15.828;info;(telemetry/index.js:17) [33m[TELEMETRY STUBBED][0m Anonymous Telemetry stubbed in development.;
+2024-07-22T21:13:15.888;info;(comKey/index.js:33) [36m[CommunicationKey][0m RSA key pair generated for signed payloads within AnythingLLM services.;
+2024-07-22T21:13:15.889;info;(EncryptionManager/index.js:25) [36m[EncryptionManager][0m Loaded existing key & salt for encrypting arbitrary data.;
+2024-07-22T21:13:15.915;info;(boot/index.js:63) Primary server in HTTP mode listening on port 3001;
+2024-07-22T21:13:15.923;info;(../node_modules/@prisma/client/runtime/library.js:21) [36mprisma:info[39m;
+2024-07-22T21:13:15.924;info;(BackgroundWorkers/index.js:22) [36m[BackgroundWorkerService][0m Feature is not enabled and will not be started.;

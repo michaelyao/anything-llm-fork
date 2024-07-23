@@ -1,0 +1,12 @@
+2024-07-22T20:57:02.097;error;uncaughtException: Maximum call stack size exceeded
+RangeError: Maximum call stack size exceeded
+    at Array.join (<anonymous>)
+    at prepareStackTrace (node:internal/errors:131:36)
+    at getStackInfo (/app/server/utils/logger/index.js:122:33)
+    at formatLogArguments (/app/server/utils/logger/index.js:100:19)
+    at logger.info (/app/server/utils/logger/index.js:80:29)
+    at logger.info (/app/server/utils/logger/index.js:80:15)
+    at logger.info (/app/server/utils/logger/index.js:80:15)
+    at logger.info (/app/server/utils/logger/index.js:80:15)
+    at logger.info (/app/server/utils/logger/index.js:80:15)
+    at logger.info (/app/server/utils/logger/index.js:80:15);

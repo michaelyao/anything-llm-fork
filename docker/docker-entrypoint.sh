@@ -6,5 +6,5 @@
     node /app/server/index.js
 } &
 { node /app/collector/index.js; } &
-wait -n
-exit $?
+# wait -n
+# exit $?
