@@ -65,6 +65,7 @@ developerEndpoints(app, apiRouter);
 embeddedEndpoints(apiRouter);
 
 if (process.env.NODE_ENV !== "development") {
+  logger.info(`running NOT in debug mode.`)
   const { MetaGenerator } = require("./utils/boot/MetaGenerator");
   const IndexPage = new MetaGenerator();
 
@@ -80,6 +81,7 @@ if (process.env.NODE_ENV !== "development") {
   );
 
   app.use("/", function (_, response) {
+    logger.info(`in index.html `)
     IndexPage.generate(response);
     return;
   });
@@ -89,6 +91,7 @@ if (process.env.NODE_ENV !== "development") {
     response.send("User-agent: *\nDisallow: /").end();
   });
 } else {
+  logger.debug(`running in debug mode.`)
   // Debug route for development connections to vectorDBs
   apiRouter.post("/v/:command", async (request, response) => {
     try {

@@ -23,6 +23,8 @@ services:
       - "../collector/outputs/:/app/collector/outputs"
       - "./:/app/docker"
       - "../server:/app/server"
+      - "../frontend:/app/frontend"
+      - "../collector:/app/collector"
     user: "${UID:-1000}:${GID:-1000}"
     ports:
       - "3001:3001"
