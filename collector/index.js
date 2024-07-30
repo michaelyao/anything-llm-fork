@@ -2,7 +2,9 @@ process.env.NODE_ENV === "development"
   ? require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` })
   : require("dotenv").config();
 
-require("./utils/logger")();
+// require("./utils/logger")();
+const logger = require("./utils/logger")
+
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
@@ -31,6 +33,7 @@ app.post(
   [verifyPayloadIntegrity],
   async function (request, response) {
     const { filename, options = {} } = reqBody(request);
+    logger.debug(`process: ${filename}   ${JSON.stringify(options, null, "")}`)
     try {
       const targetFilename = path
         .normalize(filename)
@@ -40,11 +43,20 @@ app.post(
         reason,
         documents = [],
       } = await processSingleFile(targetFilename, options);
+      logger.debug(`process >> processSingleFile is called: filename:${filename}  reason:${reason} documents.length: ${documents.length}`)
+      documents.forEach((doc, index) => {
+        logger.debug(`document index ${index}  -----------------------------`)
+        for (const [key, value] of Object.entries(doc)) {
+          logger.debug(`${key}: ${value}`)
+        }
+
+      });
+      logger.debug(`process >> processSingleFile success: ${JSON.stringify(success, null, "")}, reason: ${JSON.stringify(reason, null, "")}`)
       response
         .status(200)
         .json({ filename: targetFilename, success, reason, documents });
     } catch (e) {
-      console.error(e);
+      logger.error(e);
       response.status(200).json({
         filename: filename,
         success: false,
@@ -65,7 +77,7 @@ app.post(
       const { success, reason, documents = [] } = await processLink(link);
       response.status(200).json({ url: link, success, reason, documents });
     } catch (e) {
-      console.error(e);
+      logger.error(e);
       response.status(200).json({
         url: link,
         success: false,
@@ -86,7 +98,7 @@ app.post(
       const { success, content = null } = await getLinkText(link);
       response.status(200).json({ url: link, success, content });
     } catch (e) {
-      console.error(e);
+      logger.error(e);
       response.status(200).json({
         url: link,
         success: false,
@@ -112,7 +124,7 @@ app.post(
         .status(200)
         .json({ filename: metadata.title, success, reason, documents });
     } catch (e) {
-      console.error(e);
+      logger.error(e);
       response.status(200).json({
         filename: metadata?.title || "Unknown-doc.txt",
         success: false,

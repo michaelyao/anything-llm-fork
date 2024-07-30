@@ -17,6 +17,11 @@ const {
   convertToChatHistory,
   writeResponseChunk,
 } = require("../../../utils/helpers/chat/responses");
+// const { logger } = require("@zilliz/milvus2-sdk-node");
+const logger = require("../../../utils/logger");
+
+logger.debug(`logger is loaded in workspace.`)
+
 
 function apiWorkspaceEndpoints(app) {
   if (!app) return;
@@ -167,7 +172,10 @@ function apiWorkspaceEndpoints(app) {
     */
     try {
       const { slug } = request.params;
+      logger.debug(`get /v1/workspace >> ${slug}`)
+      console.log(`get /v1/workspace >> ${slug}`)
       const workspace = await Workspace.get({ slug });
+      logger.debug(`get /v1/workspace >> ${JSON.stringify(workspace, null, "")}`)
       response.status(200).json({ workspace });
     } catch (e) {
       console.error(e.message, e);
@@ -196,6 +204,7 @@ function apiWorkspaceEndpoints(app) {
     }
     */
       try {
+        
         const { slug = "" } = request.params;
         const VectorDb = getVectorDbClass();
         const workspace = await Workspace.get({ slug });

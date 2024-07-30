@@ -17,7 +17,7 @@ const {
 const { writeResponseChunk } = require("../utils/helpers/chat/responses");
 const { WorkspaceThread } = require("../models/workspaceThread");
 const truncate = require("truncate");
-
+const logger = require("../utils/logger")
 function chatEndpoints(app) {
   if (!app) return;
 
@@ -29,7 +29,7 @@ function chatEndpoints(app) {
         const user = await userFromSession(request, response);
         const { message } = reqBody(request);
         const workspace = response.locals.workspace;
-
+        logger.debug(`Post /workspace/:slug/stream-chat ${JSON.stringify(message, null, "")}`)
         if (!message?.length) {
           response.status(400).json({
             id: uuidv4(),
@@ -134,7 +134,7 @@ function chatEndpoints(app) {
         const { message } = reqBody(request);
         const workspace = response.locals.workspace;
         const thread = response.locals.thread;
-
+        logger.debug(`Post /workspace/:slug/thread/:threadSlug/stream-chat ${JSON.stringify(message, null, "")}  ${JSON.stringify(thread, null, "")}`)
         if (!message?.length) {
           response.status(400).json({
             id: uuidv4(),

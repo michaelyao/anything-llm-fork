@@ -11,6 +11,9 @@ const {
   recentChatHistory,
   sourceIdentifier,
 } = require("./index");
+// const { logger } = require("@zilliz/milvus2-sdk-node");
+
+const logger = require("../logger")
 
 const VALID_CHAT_MODE = ["chat", "query"];
 
@@ -24,6 +27,8 @@ async function streamChatWithWorkspace(
 ) {
   const uuid = uuidv4();
   const updatedMessage = await grepCommand(message, user);
+  logger.debug(`streamChatWithWorkspace >> updatedMessage: ${updatedMessage}, message: ${message}`)
+  logger.debug(`streamChatWithWorkspace >> VALID_COMMANDS ${JSON.stringify(VALID_COMMANDS, null, "")}`)
 
   if (Object.keys(VALID_COMMANDS).includes(updatedMessage)) {
     const data = await VALID_COMMANDS[updatedMessage](
@@ -46,7 +51,10 @@ async function streamChatWithWorkspace(
     workspace,
     thread,
   });
-  if (isAgentChat) return;
+  if (isAgentChat) {
+    logger.debug(`IsAgentChat, return`)
+    return;
+  }
 
   const LLMConnector = getLLMProvider({
     provider: workspace?.chatProvider,
@@ -58,9 +66,11 @@ async function streamChatWithWorkspace(
   const hasVectorizedSpace = await VectorDb.hasNamespace(workspace.slug);
   const embeddingsCount = await VectorDb.namespaceCount(workspace.slug);
 
+  logger.debug(`hasVectorizedSpace: ${hasVectorizedSpace}`)
   // User is trying to query-mode chat a workspace that has no data in it - so
   // we should exit early as no information can be found under these conditions.
   if ((!hasVectorizedSpace || embeddingsCount === 0) && chatMode === "query") {
+    logger.debug(`streamChatWithWorkspace >> trying to query-mode chat a workspace that has no data in it`)
     const textResponse =
       workspace?.queryRefusalResponse ??
       "There is no relevant information in this workspace to answer your query.";
@@ -87,6 +97,7 @@ async function streamChatWithWorkspace(
     return;
   }
 
+  logger.debug(`streamChatWithWorkspace >> query in workspace`)
   // If we are here we know that we are in a workspace that is:
   // 1. Chatting in "chat" mode and may or may _not_ have embeddings
   // 2. Chatting in "query" mode and has at least 1 embedding
@@ -101,6 +112,7 @@ async function streamChatWithWorkspace(
     messageLimit,
   });
 
+  logger.debug(`streamChatWithWorkspace >> start the doc search`)
   // Look for pinned documents and see if the user decided to use this feature. We will also do a vector search
   // as pinning is a supplemental tool but it should be used with caution since it can easily blow up a context window.
   // However we limit the maximum of appended context to 80% of its overall size, mostly because if it expands beyond this
@@ -144,6 +156,7 @@ async function streamChatWithWorkspace(
 
   // Failed similarity search if it was run at all and failed.
   if (!!vectorSearchResults.message) {
+    logger.debug(`streamChatWithWorkspace >> No vectorSearchResults.message}`)
     writeResponseChunk(response, {
       id: uuid,
       type: "abort",
@@ -154,6 +167,14 @@ async function streamChatWithWorkspace(
     });
     return;
   }
+  logger.debug(`vectorSearchResults.sources>> `)
+  
+  vectorSearchResults.sources.forEach((src, index) => {
+    logger.debug(`${index} text result:`)
+    logger.debug(`${src.text}`)
+    }
+  );
+
 
   const { fillSourceWindow } = require("../helpers/chat");
   const filledSources = fillSourceWindow({
@@ -162,7 +183,7 @@ async function streamChatWithWorkspace(
     history: rawHistory,
     filterIdentifiers: pinnedDocIdentifiers,
   });
-
+  logger.debug(`filledSources>> ${JSON.stringify(filledSources, null, "")}`)
   // Why does contextTexts get all the info, but sources only get current search?
   // This is to give the ability of the LLM to "comprehend" a contextual response without
   // populating the Citations under a response with documents the user "thinks" are irrelevant
@@ -172,6 +193,9 @@ async function streamChatWithWorkspace(
   // TLDR; reduces GitHub issues for "LLM citing document that has no answer in it" while keep answers highly accurate.
   contextTexts = [...contextTexts, ...filledSources.contextTexts];
   sources = [...sources, ...vectorSearchResults.sources];
+
+  logger.debug(`contextTexts>> ${JSON.stringify(contextTexts, null, "")}`)
+  logger.debug(`sources>> ${JSON.stringify(sources, null, "")}`)
 
   // If in query mode and no context chunks are found from search, backfill, or pins -  do not
   // let the LLM try to hallucinate a response or use general knowledge and exit early
@@ -202,7 +226,7 @@ async function streamChatWithWorkspace(
     });
     return;
   }
-
+  logger.debug(`streamChatWithWorkspace >> compressMessages`)
   // Compress & Assemble message to ensure prompt passes token limit with room for response
   // and build system messages based on inputs and history.
   const messages = await LLMConnector.compressMessages(
@@ -214,6 +238,12 @@ async function streamChatWithWorkspace(
     },
     rawHistory
   );
+  logger.debug(`streamChatWithWorkspace:getChatCompletion \n${JSON.stringify(messages, null, "")}\nEnd of getChatCompletion`)
+  logger.debug(`start of messages`)
+  messages.forEach(function (msg) {
+    logger.debug(`-->: ${JSON.stringify(msg, null, "")}`)
+  });
+  logger.debug(`End of messages`)
 
   // If streaming is not explicitly enabled for connector
   // we do regular waiting of a response and send a single chunk.
@@ -221,6 +251,8 @@ async function streamChatWithWorkspace(
     console.log(
       `\x1b[31m[STREAMING DISABLED]\x1b[0m Streaming is not available for ${LLMConnector.constructor.name}. Will use regular chat method.`
     );
+
+    
     completeText = await LLMConnector.getChatCompletion(messages, {
       temperature: workspace?.openAiTemp ?? LLMConnector.defaultTemp,
     });
@@ -233,6 +265,7 @@ async function streamChatWithWorkspace(
       error: false,
     });
   } else {
+    logger.debug(`streamChatWithWorkspace >> streamingEnabled`)
     const stream = await LLMConnector.streamGetChatCompletion(messages, {
       temperature: workspace?.openAiTemp ?? LLMConnector.defaultTemp,
     });
@@ -240,9 +273,11 @@ async function streamChatWithWorkspace(
       uuid,
       sources,
     });
+   
   }
-
+  logger.debug(`streamChatWithWorkspace:getChatCompletion>>Respond: \n${completeText}`)
   if (completeText?.length > 0) {
+    logger.debug(`streamChatWithWorkspace >> completeText`)
     const { chat } = await WorkspaceChats.new({
       workspaceId: workspace.id,
       prompt: message,
@@ -260,7 +295,7 @@ async function streamChatWithWorkspace(
     });
     return;
   }
-
+  logger.debug(`streamChatWithWorkspace >> Not completeText`)
   writeResponseChunk(response, {
     uuid,
     type: "finalizeResponseStream",

@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require("uuid");
 const moment = require("moment");
+const logger = require("../../logger");
 
 function clientAbortedHandler(resolve, fullText) {
   console.log(
@@ -102,6 +103,7 @@ function convertToPromptHistory(history = []) {
 }
 
 function writeResponseChunk(response, data) {
+  logger.debug(`writeResponseChunk >> ${JSON.stringify(data)}`)
   response.write(`data: ${JSON.stringify(data)}\n\n`);
   return;
 }

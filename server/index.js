@@ -44,7 +44,7 @@ if (!!process.env.ENABLE_HTTPS) {
   require("@mintplex-labs/express-ws").default(app); // load WebSockets in non-SSL mode.
 }
 
-logger.info("this is test")
+logger.info("load all the endpoints")
 
 app.use("/api", apiRouter);
 systemEndpoints(apiRouter);
@@ -81,7 +81,7 @@ if (process.env.NODE_ENV !== "development") {
   );
 
   app.use("/", function (_, response) {
-    logger.info(`in index.html `)
+    logger.info(`request for '/' `)
     IndexPage.generate(response);
     return;
   });
@@ -91,7 +91,7 @@ if (process.env.NODE_ENV !== "development") {
     response.send("User-agent: *\nDisallow: /").end();
   });
 } else {
-  logger.debug(`running in debug mode.`)
+  logger.debug(`running in development mode.`)
   // Debug route for development connections to vectorDBs
   apiRouter.post("/v/:command", async (request, response) => {
     try {

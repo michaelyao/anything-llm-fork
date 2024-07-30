@@ -1,4 +1,5 @@
 const { EncryptionManager } = require("../EncryptionManager");
+const logger = require("../logger")
 
 // When running locally will occupy the 0.0.0.0 hostname space but when deployed inside
 // of docker this endpoint is not exposed so it is only on the Docker instances internal network
@@ -24,12 +25,14 @@ class CollectorApi {
   }
 
   async online() {
+    logger.debug(`collector.online ${this.endpoint}`)
     return await fetch(this.endpoint)
       .then((res) => res.ok)
       .catch(() => false);
   }
 
   async acceptedFileTypes() {
+    logger.debug(`collector.acceptedFileTypes ${this.endpoint}/accepts`)
     return await fetch(`${this.endpoint}/accepts`)
       .then((res) => {
         if (!res.ok) throw new Error("failed to GET /accepts");
@@ -37,45 +40,51 @@ class CollectorApi {
       })
       .then((res) => res)
       .catch((e) => {
-        this.log(e.message);
+        logger.error(e.message);
         return null;
       });
   }
 
   async processDocument(filename = "") {
+    logger.debug(`collector.processDocument filename: ${filename}`)
     if (!filename) return false;
 
     const data = JSON.stringify({
       filename,
       options: this.#attachOptions(),
     });
-
-    return await fetch(`${this.endpoint}/process`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Integrity": this.comkey.sign(data),
-        "X-Payload-Signer": this.comkey.encrypt(
-          new EncryptionManager().xPayload
-        ),
-      },
-      body: data,
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Response could not be completed");
-        return res.json();
+    logger.debug(`collector.processDocument ${this.endpoint}/process ${data}`)
+    try{
+      const response = await fetch(`${this.endpoint}/process`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Integrity": this.comkey.sign(data),
+          "X-Payload-Signer": this.comkey.encrypt(
+            new EncryptionManager().xPayload
+          ),
+        },
+        body: data,
       })
-      .then((res) => res)
-      .catch((e) => {
-        this.log(e.message);
+      if (!response.ok) throw new Error("Response could not be completed");
+      const res = await response.json();
+      logger.debug(`collector.processDocument response: ${JSON.stringify(res, null, "")}`)
+      
+      return res;
+    }
+    catch(e){
+        logger.error(e.message);
+        logger.error(`error when calling collector process ${e}`)
         return { success: false, reason: e.message, documents: [] };
-      });
+    }
+
   }
 
   async processLink(link = "") {
     if (!link) return false;
 
     const data = JSON.stringify({ link });
+    logger.debug(`collector.processLink ${this.endpoint}/process-link. link: ${data}`)
     return await fetch(`${this.endpoint}/process-link`, {
       method: "POST",
       headers: {
@@ -88,18 +97,24 @@ class CollectorApi {
       body: data,
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Response could not be completed");
+        if (!res.ok) {
+          logger.error(`collector.processLink error response: ${JSON.stringify(res.json())}`)
+          throw new Error("Response could not be completed");
+        }
+
+        logger.debug(`collector.processLink response: ${JSON.stringify(res.json(), null, "")}`)
         return res.json();
       })
       .then((res) => res)
       .catch((e) => {
-        this.log(e.message);
+        logger.error(e.message);
         return { success: false, reason: e.message, documents: [] };
       });
   }
 
   async processRawText(textContent = "", metadata = {}) {
     const data = JSON.stringify({ textContent, metadata });
+    logger.debug(`collector.processRawText ${this.endpoint}/process-raw-text. link: ${data}`)
     return await fetch(`${this.endpoint}/process-raw-text`, {
       method: "POST",
       headers: {
@@ -112,12 +127,16 @@ class CollectorApi {
       body: data,
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Response could not be completed");
+        if (!res.ok) {
+          logger.error(`collector.processRawText error response: ${JSON.stringify(res.json())}`)
+          throw new Error("Response could not be completed");
+        }
+        logger.debug(`collector.processRawText response: ${JSON.stringify(res.json(), null, "")}`)
         return res.json();
       })
       .then((res) => res)
       .catch((e) => {
-        this.log(e.message);
+        logger.error(e.message);
         return { success: false, reason: e.message, documents: [] };
       });
   }
@@ -126,6 +145,7 @@ class CollectorApi {
   // all requests through the server. You can use this function to directly expose a specific endpoint
   // on the document processor.
   async forwardExtensionRequest({ endpoint, method, body }) {
+    logger.debug(`collector.forwardExtensionRequest ${this.endpoint}${endpoint}. method: ${JSON.stringify(method)}.  body: ${JSON.stringify(body)}`)
     return await fetch(`${this.endpoint}${endpoint}`, {
       method,
       body, // Stringified JSON!
@@ -143,15 +163,19 @@ class CollectorApi {
       })
       .then((res) => res)
       .catch((e) => {
-        this.log(e.message);
+        logger.error(e.message);
         return { success: false, data: {}, reason: e.message };
       });
   }
 
   async getLinkContent(link = "") {
-    if (!link) return false;
-
+    if (!link) {
+      logger.debug(`collector.getLinkContent empty link`)
+      return false;
+    }
+    
     const data = JSON.stringify({ link });
+    logger.debug(`collector.getLinkContent link: ${data}`)
     return await fetch(`${this.endpoint}/util/get-link`, {
       method: "POST",
       headers: {
@@ -164,12 +188,16 @@ class CollectorApi {
       body: data,
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Response could not be completed");
+        if (!res.ok) {
+          logger.error(`collector.getLinkContent error res: ${JSON.stringify(res.json(), null, "")}`)
+          throw new Error("Response could not be completed");
+        }
+        logger.debug(`collector.getLinkContent res: ${JSON.stringify(res.json(), null, "")}`)
         return res.json();
       })
       .then((res) => res)
       .catch((e) => {
-        this.log(e.message);
+        logger.error(e.message);
         return { success: false, content: null };
       });
   }

@@ -24,7 +24,16 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
         libgcc1 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libx11-6 libx11-xcb1 libxcb1 \
         libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 \
         libxss1 libxtst6 ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release \
-        xdg-utils git build-essential ffmpeg && \
+        xdg-utils git build-essential ffmpeg \
+        curl \
+        wget \
+        tzdata \
+        zip \
+        unzip \
+        sudo \
+        yasm \
+        vim \
+    && \
     mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
@@ -35,6 +44,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
         && rm yarn_1.22.19_all.deb && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+RUN echo 'root:docker' | chpasswd
 
 # Create a group and user with specific UID and GID
 RUN getent group anythingllm ||  groupadd   -g "$ARG_GID" anythingllm && \
@@ -103,6 +114,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
 RUN getent group anythingllm ||  groupadd -g   "$ARG_GID" anythingllm && \
      id -u anythingllm ||  useradd -l   -u "$ARG_UID" -m -d /app -s /bin/bash -g anythingllm anythingllm && \
     mkdir -p /app/frontend/ /app/server/ /app/collector/ && chown -R anythingllm:anythingllm /app
+
+RUN yarn global add pm2
 
 # Copy docker helper scripts
 # COPY ./docker/docker-entrypoint.sh /usr/local/bin/
@@ -181,7 +194,7 @@ ENV NODE_ENV=development
 ENV ANYTHING_LLM_RUNTIME=docker
 
 # Expose the server port
-EXPOSE 3001
+EXPOSE 3001 5173 3000 8888
 
 # Setup the healthcheck
 # HEALTHCHECK --interval=1m --timeout=10s --start-period=1m \

@@ -1,9 +1,12 @@
 const { v4 } = require("uuid");
 const { SystemSettings } = require("./systemSettings");
+// const { logger } = require("@zilliz/milvus2-sdk-node");
+const logger = require("../utils/logger");
 
 const Telemetry = {
   // Write-only key. It can't read events or any of your other data, so it's safe to use in public apps.
-  pubkey: "phc_9qu7QLpV8L84P3vFmEiZxL020t2EqIubP7HHHxrSsqS",
+  // pubkey: "phc_9qu7QLpV8L84P3vFmEiZxL020t2EqIubP7HHHxrSsqS",
+  pubkey:"phc_A1wgACnLfhrBErsU8i3MC0Fw7cI6AUXDIA5yuHrHtzK",
   stubDevelopmentEvents: true, // [DO NOT TOUCH] Core team only.
   label: "telemetry_id",
 
@@ -23,7 +26,11 @@ const Telemetry = {
   },
 
   client: function () {
-    if (process.env.DISABLE_TELEMETRY === "true" || this.isDev()) return null;
+    if (process.env.DISABLE_TELEMETRY === "true" || this.isDev()) {
+      logger.debug(`skipping initiating PostHog`)
+      return null;
+    }
+    logger.debug(`initiate PostHog`)
     const { PostHog } = require("posthog-node");
     return new PostHog(this.pubkey);
   },
@@ -42,10 +49,11 @@ const Telemetry = {
   ) {
     try {
       const { client, distinctId: systemId } = await this.connect();
+      logger.debug(`connecting to telemetry ${systemId}`)
       if (!client) return;
       const distinctId = !!subUserId ? `${systemId}::${subUserId}` : systemId;
       const properties = { ...eventProperties, runtime: this.runtime() };
-
+      logger.debug(`TELEMETRY SENT ${distinctId} ${event} ${JSON.stringify(properties)}`)
       // Silence some events to keep logs from being too messy in production
       // eg: Tool calls from agents spamming the logs.
       if (!silent) {

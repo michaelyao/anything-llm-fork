@@ -1,4 +1,5 @@
 const { v4 } = require("uuid");
+const logger = require("../../../utils/logger")
 const {
   createdDate,
   trashFile,

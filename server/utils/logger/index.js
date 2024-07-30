@@ -13,10 +13,10 @@ const myFormat = printf(({ timestamp, level, message, meta }) => {
 });
 
 
-var PROJECT_ROOT = path.join(__dirname, '..')
+var PROJECT_ROOT = path.join(__dirname, '../..')
 //var appRoot = require('app-root-path');
 
-timestamp_str = moment().format("_YYYY_MM_DD_HH_mm_ss_SSS_");
+timestamp_str = moment().tz(config.C_PST_TZ).format("_YYYY_MM_DD_HH_mm_ss_SSS_");
 /**
  * error
 warn
