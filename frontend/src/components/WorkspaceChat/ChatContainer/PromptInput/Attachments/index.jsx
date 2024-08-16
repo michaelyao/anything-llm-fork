@@ -5,6 +5,7 @@ import {
   FileDoc,
   FileHtml,
   FileText,
+  FileImage,
   FilePdf,
   WarningOctagon,
   X,
@@ -20,7 +21,7 @@ import { Tooltip } from "react-tooltip";
 export default function AttachmentManager({ attachments }) {
   if (attachments.length === 0) return null;
   return (
-    <div className="flex flex-wrap my-2">
+    <div className="flex flex-wrap mt-4 mb-2">
       {attachments.map((attachment) => (
         <AttachmentItem key={attachment.uid} attachment={attachment} />
       ))}
@@ -32,7 +33,7 @@ export default function AttachmentManager({ attachments }) {
  * @param {{attachment: import("../../DnDWrapper").Attachment}}
  */
 function AttachmentItem({ attachment }) {
-  const { uid, file, status, error, document } = attachment;
+  const { uid, file, status, error, document, type } = attachment;
   const { iconBgColor, Icon } = displayFromFile(file);
 
   function removeFileFromQueue() {
@@ -82,7 +83,7 @@ function AttachmentItem({ attachment }) {
             </button>
           </div>
           <div
-            className={`bg-danger rounded-lg flex items-center justify-center flex-shrink-0 p-1`}
+            className={`bg-error rounded-lg flex items-center justify-center flex-shrink-0 p-1`}
           >
             <WarningOctagon size={30} className="text-white" />
           </div>
@@ -98,6 +99,48 @@ function AttachmentItem({ attachment }) {
         </div>
         <Tooltip
           id={`attachment-uid-${uid}-error`}
+          place="top"
+          delayShow={300}
+          className="allm-tooltip !allm-text-xs"
+        />
+      </>
+    );
+  }
+
+  if (type === "attachment") {
+    return (
+      <>
+        <div
+          data-tooltip-id={`attachment-uid-${uid}-success`}
+          data-tooltip-content={`${file.name} will be attached to this prompt. It will not be embedded into the workspace permanently.`}
+          className={`relative h-14 px-2 py-2 flex items-center gap-x-4 rounded-lg bg-zinc-800 border border-white/20 w-[200px] group`}
+        >
+          <div className="invisible group-hover:visible absolute -top-[5px] -right-[5px] w-fit h-fit z-[10]">
+            <button
+              onClick={removeFileFromQueue}
+              type="button"
+              className="bg-zinc-700 hover:bg-red-400 rounded-full p-1 flex items-center justify-center hover:border-transparent border border-white/40"
+            >
+              <X
+                size={10}
+                className="flex-shrink-0 text-zinc-200 group-hover:text-white"
+              />
+            </button>
+          </div>
+          <div
+            className={`${iconBgColor} rounded-lg flex items-center justify-center flex-shrink-0 p-1`}
+          >
+            <Icon size={30} className="text-white" />
+          </div>
+          <div className="flex flex-col w-[130px]">
+            <p className="text-white text-xs font-medium truncate">
+              {file.name}
+            </p>
+            <p className="text-white/80 text-xs font-medium">Image attached!</p>
+          </div>
+        </div>
+        <Tooltip
+          id={`attachment-uid-${uid}-success`}
           place="top"
           delayShow={300}
           className="allm-tooltip !allm-text-xs"
@@ -158,7 +201,7 @@ function displayFromFile(file) {
     case "docx":
       return { iconBgColor: "bg-royalblue", Icon: FileDoc };
     case "html":
-      return { iconBgColor: "bg-warn", Icon: FileHtml };
+      return { iconBgColor: "bg-purple", Icon: FileHtml };
     case "csv":
     case "xlsx":
       return { iconBgColor: "bg-success", Icon: FileCsv };
@@ -168,8 +211,11 @@ function displayFromFile(file) {
     case "jsx":
     case "cpp":
     case "c":
-    case "c":
       return { iconBgColor: "bg-warn", Icon: FileCode };
+    case "png":
+    case "jpg":
+    case "jpeg":
+      return { iconBgColor: "bg-royalblue", Icon: FileImage };
     default:
       return { iconBgColor: "bg-royalblue", Icon: FileText };
   }

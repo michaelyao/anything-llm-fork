@@ -23,7 +23,8 @@ async function streamChatWithWorkspace(
   message,
   chatMode = "chat",
   user = null,
-  thread = null
+  thread = null,
+  attachments = []
 ) {
   const uuid = uuidv4();
   const updatedMessage = await grepCommand(message, user);
@@ -79,6 +80,7 @@ async function streamChatWithWorkspace(
       type: "textResponse",
       textResponse,
       sources: [],
+      attachments,
       close: true,
       error: null,
     });
@@ -89,6 +91,7 @@ async function streamChatWithWorkspace(
         text: textResponse,
         sources: [],
         type: chatMode,
+        attachments,
       },
       threadId: thread?.id || null,
       include: false,
@@ -219,6 +222,7 @@ async function streamChatWithWorkspace(
         text: textResponse,
         sources: [],
         type: chatMode,
+        attachments,
       },
       threadId: thread?.id || null,
       include: false,
@@ -235,6 +239,7 @@ async function streamChatWithWorkspace(
       userPrompt: updatedMessage,
       contextTexts,
       chatHistory,
+      attachments,
     },
     rawHistory
   );
@@ -281,7 +286,7 @@ async function streamChatWithWorkspace(
     const { chat } = await WorkspaceChats.new({
       workspaceId: workspace.id,
       prompt: message,
-      response: { text: completeText, sources, type: chatMode },
+      response: { text: completeText, sources, type: chatMode, attachments },
       threadId: thread?.id || null,
       user,
     });
